@@ -1,0 +1,22 @@
+sudo: required
+services:
+  -docker
+
+before_install:
+  - docker build -t sharon92/react-test -f ./react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run sharon92/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t sharon92/multi-client ./client
+  - docker build -t sharon92/multi-nginx ./nginx 
+  - docker build -t sharon92/multi-worker ./worker
+  - docker build -t sharon92/multi-server ./server
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push the images to docker hub
+  - docker push sharon92/multi-client
+  - docker push sharon92/multi-nginx
+  - docker push sharon92/multi-worker
+  - docker push sharon92/multi-server
